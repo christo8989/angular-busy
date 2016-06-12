@@ -21,6 +21,9 @@
     "load-grunt-tasks": "~0.4.0"
   },
   "scripts": {
-    "test": "grunt test -v"
+    "test:grunt": "grunt test -v",
+    "pretest:server": "sudo webdriver-manager update",
+    "test:server":"echo sudo webdriver-manager start > server.command; chmod +x server.command; open server.command",
+    "test:protractor": "protractor conf.js"
   }
 }
