@@ -2,42 +2,31 @@ describe('cgBusy', function () {
 
     var $this = this,
         doneText = 'done: ',
-        EC;
-
-    $this.getSpinner = function () {
-        return element(by.css('.cg-busy-default-sign'));
-    };
-
-    $this.getWizard = function(){};
-
-    var delayInput,
-        durationInput,
-        messageInput,
-        backdropCheckbox,
-        templateUrl,
-        demoButton;
+        EC = protractor.ExpectedConditions,
+        delayInput = element(by.model('delay')),
+        durationInput = element(by.model('minDuration')),
+        messageInput = element(by.model('message')),
+        backdropCheckbox = element(by.model('backdrop')),
+        templateUrl = element(by.model('templateUrl')),
+        demoButton = element(by.css('.btn')),
+        getWizard,
+        getSpinner;
 
     beforeEach(function() {
         console.log('\n');
         browser.get('http://cgross.github.io/angular-busy/demo');
 
-        EC = protractor.ExpectedConditions;
-
-        delayInput = element(by.model('delay'));
-        durationInput = element(by.model('minDuration'));
-        messageInput = element(by.model('message'));
-        backdropCheckbox = element(by.model('backdrop'));
-        templateUrl = element(by.model('templateUrl'));
-        demoButton = element(by.css('.btn'));
-
-        $this.getWizard = function () {
+        getWizard = function () {
             return element(by.deepCss('background-image: url("finalfantasy.gif");'));
+        };
+        getSpinner = function () {
+            return element(by.css('.cg-busy.cg-busy-animation.ng-scope'));
         };
     });
 
-    this.set = function (elem, value) {
+    function set(elem, value) {
         elem.clear();
-        elem.sendText(value);
+        elem.sendKeys(value);
     }
 
     //I should break this down into multiple tests.
@@ -187,117 +176,85 @@ describe('cgBusy', function () {
         console.log(doneText, mockupTest);
     });
 
-/*
-    var delayTest = 'delay (ms) is the amount of time before the busy indicator appears';
-    it(delayTest, function () {
-        expect(delayInput).toBeTruthy();
-        expect(delayInput.getTagName()).toBe('input');
 
-        var delay = 2000,
-            maxDelay = delay + 50;
-            minDelay = delay - 10;
-        //set delay to 1 second
-        delayInput.sendKeys(delay);
-        durationInput.sendKeys(4000);
-        //press button
-        demoButton.click();
-        //time how long it takes
-        //var innerText = element(by.css('.checkbox')).getInnerHtml();
-        //console.log(spinner);
-        var tStart = Date.now(),
-            tEnd;
-        browser.wait(EC.visibilityOf(spinner, 4000))
-            .then(function () {
-                //is it equal to the delay
-                var totalTime = Date.now() - tStart;
-                console.log("time: ", totalTime);
-                expect(totalTime).toBeLessThan(maxDelay);
-                expect(totalTime).not.toBeLessThan(minDelay);
-            });
+    var delayTest = 'Test if the delay works.';
+    it(delayTest, function () {
+        set(delayInput, 2000);
+        set(durationInput, 4000);
+
+        //This doesn't work and I have no idea why.
+        //I spent a lot of time trying to figure it out... :(
+        //Sad times.
+        var tResult = 0;
+        var tStart = 0;
+        var spinner = element(by.css('.cg-busy.cg-busy-animation.ng-scope'));
+        var waitForMe = function() {
+            return spinner.getAttribute('class')
+                .then(data => data.includes('ng-hide') === false);
+        };
+        demoButton.click(demoButton)
+            .then(() => tStart = Date.now())
+            .then(() =>
+                browser.wait(waitForMe, 5000)
+                    .then(() => {
+                        tResult = Date.now() - tStart;
+                        expect(tResult).toBeGreaterThan(1999);
+                        expect(tResult).toBeLessThan(2200);
+                        return;
+                    })
+            );
 
         console.log(doneText, delayTest);
     });
-    */
 
-    var minDuration = 'min duration (ms) is the amount of time the busy indicator is visible';
-    it(minDuration, function () {
 
-        //TODO: NotImplemented
-        //check if the min duration is there
-        //set min duration to 1 second
-        //press button
-        //time how long the indicator is visible
-        //is it greater than or equal to the min duration
 
-        console.log(doneText, minDuration);
+    var durationTest = 'Test if the duration works.';
+    it(durationTest, function () {
+        set(delayInput, 0);
+        set(durationInput, 2000);
+
+        var tResult = 0;
+        var tStart = 0;
+        var spinner = getSpinner();
+        var waitForMe = function() {
+            return spinner.getAttribute('class')
+                .then(data => data.includes('ng-hide'));
+        };
+        demoButton.click(demoButton)
+            .then(() => tStart = Date.now())
+            .then(() =>
+                browser.wait(waitForMe, 6000)
+                    .then(() => {
+                        tResult = Date.now() - tStart;
+                        expect(tResult).toBeGreaterThan(1999);
+                        return;
+                    })
+            );
+
+        console.log(durationTest, delayTest);
     });
 
-    var templateUrlChange = 'selecting the template url changes the busy indicator from a spinner to a dancing wizard';
+
+
+    var templateUrlChange = 'Select the dancing wizard and show that it\'s visible';
     it(templateUrlChange, function () {
+        set(delayInput, 0);
+        set(durationInput, 1000);
 
-        //TODO: NotImplemented
-        //check if the spinner dancing wizard exists
-        delayInput.sendKeys(0);
-        durationInput.sendKeys(0);
-        //select the template url
-        var i = 1;
         var options = element.all(by.tagName('option'));
-        var option = options.get(i);
-        option.click();
+        var option = options.get(1);
         expect(option.getAttribute('value')).toEqual('custom-template.html');
-        //press the button
-        demoButton.click();
-        //check if the dancing wizard is visible
-        // by.css("input[id*=Solution_MultiComboSelection_Input]")
-        wizard = this.getWizard();
-        wizard.getOuterHtml().then(function(text) { console.log(text);});
-        expect(wizard.isDisplayed().then(function (displayed) {
-            if (displayed) {
-                console.log('This is true.');
-            } else {
-                console.log('This is false.');
-            }
-        })).toBe(true);
 
-        //check if the spinner is not visible
-        expect(spinner.isDisplayed()).toBe(false);
+        option.click();
+        demoButton.click();
+        var wizard = getWizard();
+        expect(wizard.isDisplayed()).toBe(true);
 
         console.log(doneText, templateUrlChange);
     });
 
-    var switchFromStandard = 'switch from standard, press demo and then to custom-tempelate.html and press demo, dancing wizard should show.';
-    it(switchFromStandard, function () {
-
-        //TODO: NotImplemented
-        //press demo
-        //check if spinner is visible
-        //check if wizard is NOT visible
-
-        //select the template url
-        //press demo
-        //check if the dancing wizard is visible
-        //check if the spinner is not visible
-
-        console.log(doneText, switchFromStandard);
-    });
-
-    var messageTextBox = 'message in the busy spinner is set by the message text box';
-    it(messageTextBox, function () {
-
-        //TODO: NotImplemented
-        //check if the spinner has a message label with the same variable as the message text box
-        //type "Loading..." into the message text box
-        //click demo button
-        //check if the spinner has the text from the message text box
-
-        //change the template url to the custom-tempelate
-        //click demo button
-        //check if the wizard has the text from the message text box
-
-        console.log(doneText, messageTextBox);
-    });
-
-    var userExperience = 'the following user experience is supported';
+    var userExperience = 'Message in the spinner is set to the main message.';
     it(userExperience, function () {
 
         //TODO: NotImplemented
@@ -321,15 +278,4 @@ describe('cgBusy', function () {
 
         console.log(doneText, userExperience);
     });
-
-
-    var selectDropdownbyNum = function ( parent, optionNum ) {
-        if (optionNum){
-        var options = parent.element.all(by.tagName('option'))
-            .then(function(options){
-                options.get(optionNum).click();
-            });
-        }
-        return options;
-    };
 });
